@@ -1,29 +1,49 @@
 import Fastify from 'fastify';
 import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
-import { Type } from '@sinclair/typebox';
+import { configureDatabases } from './config/database.config';
+import { healthRoutes } from './api/v1/health/health.route';
+import { printRoutes } from './utils/logger';
+import { configureEnv } from './config/env.config';
+
+interface EnvConfig {
+  POSTGRES_USER: string;
+  POSTGRES_PASSWORD: string;
+  POSTGRES_DB: string;
+  POSTGRES_HOST: string;
+  POSTGRES_PORT: string;
+  REDIS_HOST: string;
+  REDIS_PORT: string;
+  PORT: string;
+  HOST: string;
+}
 
 const server = Fastify({
   logger: true
 }).withTypeProvider<TypeBoxTypeProvider>();
 
-// Define a route with TypeBox schema
-server.get('/', {
-  schema: {
-    response: {
-      200: Type.Object({
-        message: Type.String()
-      })
-    }
-  }
-}, async (request, reply) => {
-  return { message: 'Hello from Fastify!' };
-});
-
 // Start the server
 const start = async () => {
   try {
-    await server.listen({ port: 3000, host: '0.0.0.0' });
-    console.log('Server is running on http://localhost:3000');
+    // Configure environment variables first
+    await server.register(configureEnv);
+
+    // Configure databases
+    await server.register(configureDatabases);
+
+    // Register routes
+    await server.register(healthRoutes, { prefix: '/api/v1' });
+
+    // Start listening
+    const config = (server as any).config as EnvConfig;
+    await server.listen({ 
+      port: parseInt(config.PORT), 
+      host: config.HOST 
+    });
+    
+    console.log(`Server is running on http://${config.HOST}:${config.PORT}`);
+    
+    // Print available routes
+    printRoutes(server);
   } catch (err) {
     server.log.error(err);
     process.exit(1);
