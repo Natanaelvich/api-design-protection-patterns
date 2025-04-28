@@ -1,4 +1,3 @@
-import { Type } from '@sinclair/typebox';
 import { FastifyInstance } from 'fastify';
 import env from '@fastify/env';
 import dotenv from 'dotenv';
@@ -32,10 +31,13 @@ const schema = {
   }
 };
 
+const options = {
+  schema,
+  dotenv: true,
+  data: process.env,
+  confKey: 'config' // This is the key that will be used to access the config
+};
+
 export const configureEnv = async (server: FastifyInstance) => {
-  await server.register(env, {
-    schema,
-    dotenv: true,
-    data: process.env
-  });
+  return server.register(env, options);
 }; 

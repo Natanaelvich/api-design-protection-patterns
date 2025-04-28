@@ -25,7 +25,7 @@ const server = Fastify({
 const start = async () => {
   try {
     // Configure environment variables first
-    await server.register(configureEnv);
+    await configureEnv(server);
 
     // Configure databases
     await server.register(configureDatabases);
