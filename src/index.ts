@@ -4,6 +4,7 @@ import { configureDatabases } from './config/database.config';
 import { healthRoutes } from './api/v1/health/health.route';
 import { printRoutes } from './utils/logger';
 import { configureEnv } from './config/env.config';
+import { Table } from 'console-table-printer';
 
 interface EnvConfig {
   POSTGRES_USER: string;
@@ -40,7 +41,21 @@ const start = async () => {
       host: config.HOST 
     });
     
-    console.log(`Server is running on http://${config.HOST}:${config.PORT}`);
+    // Print server information
+    const serverInfo = new Table({
+      columns: [
+        { name: 'key', alignment: 'left', color: 'yellow' },
+        { name: 'value', alignment: 'left', color: 'cyan' }
+      ],
+    });
+
+    serverInfo.addRow({ key: 'Server URL', value: `http://${config.HOST}:${config.PORT}` });
+    serverInfo.addRow({ key: 'Environment', value: process.env.NODE_ENV || 'development' });
+    serverInfo.addRow({ key: 'PostgreSQL', value: `${config.POSTGRES_HOST}:${config.POSTGRES_PORT}` });
+    serverInfo.addRow({ key: 'Redis', value: `${config.REDIS_HOST}:${config.REDIS_PORT}` });
+
+    console.log('\n🚀 Server Information:');
+    serverInfo.printTable();
     
     // Print available routes
     printRoutes(server);
