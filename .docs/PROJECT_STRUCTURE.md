@@ -19,6 +19,11 @@ api-design-protection-patterns/
 │   │
 │   ├── api/                          # API endpoints
 │   │   ├── v1/                       # Version 1 endpoints
+│   │   │   ├── auth/                 # Authentication endpoints
+│   │   │   │   ├── login.ts          # Login endpoint
+│   │   │   │   ├── register.ts       # Registration endpoint
+│   │   │   │   ├── refresh.ts        # Token refresh endpoint
+│   │   │   │   └── logout.ts         # Logout endpoint
 │   │   │   ├── products/             # Products endpoints
 │   │   │   ├── users/                # Users endpoints
 │   │   │   ├── orders/               # Orders endpoints
@@ -34,7 +39,10 @@ api-design-protection-patterns/
 │   │   └── inventory.ts              # Inventory model
 │   │
 │   ├── middleware/                   # Middleware functions
-│   │   ├── auth.ts                   # Authentication middleware
+│   │   ├── auth/                     # Authentication middleware
+│   │   │   ├── jwt.ts                # JWT verification
+│   │   │   ├── roles.ts              # Role-based access control
+│   │   │   └── session.ts            # Session management
 │   │   ├── rate-limiter.ts           # Rate limiting middleware
 │   │   ├── circuit-breaker.ts        # Circuit breaker middleware
 │   │   ├── timeout.ts                # Timeout middleware
