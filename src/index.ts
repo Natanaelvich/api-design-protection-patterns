@@ -3,21 +3,8 @@ import { TypeBoxTypeProvider } from '@fastify/type-provider-typebox';
 import { configureDatabases } from './config/database.config';
 import { healthRoutes } from './api/v1/health/health.route';
 import { printRoutes } from './utils/logger';
-import { configureEnv } from './config/env.config';
+import { env } from './config/env';
 import { Table } from 'console-table-printer';
-
-interface EnvConfig {
-  POSTGRES_USER: string;
-  POSTGRES_PASSWORD: string;
-  POSTGRES_DB: string;
-  POSTGRES_HOST: string;
-  POSTGRES_PORT: string;
-  REDIS_HOST: string;
-  REDIS_PORT: string;
-  PORT: string;
-  HOST: string;
-  JWT_SECRET: string;
-}
 
 const server = Fastify({
   logger: true
@@ -26,9 +13,6 @@ const server = Fastify({
 // Start the server
 const start = async () => {
   try {
-    // Configure environment variables first
-    await configureEnv(server);
-
     // Configure databases
     await server.register(configureDatabases);
 
@@ -36,10 +20,9 @@ const start = async () => {
     await server.register(healthRoutes, { prefix: '/api/v1' });
 
     // Start listening
-    const config = (server as any).config as EnvConfig;
     await server.listen({ 
-      port: parseInt(config.PORT), 
-      host: config.HOST 
+      port: parseInt(env.PORT), 
+      host: env.HOST 
     });
     
     // Print server information
@@ -50,10 +33,10 @@ const start = async () => {
       ],
     });
 
-    serverInfo.addRow({ key: 'Server URL', value: `http://${config.HOST}:${config.PORT}` });
-    serverInfo.addRow({ key: 'Environment', value: process.env.NODE_ENV || 'development' });
-    serverInfo.addRow({ key: 'PostgreSQL', value: `${config.POSTGRES_HOST}:${config.POSTGRES_PORT}` });
-    serverInfo.addRow({ key: 'Redis', value: `${config.REDIS_HOST}:${config.REDIS_PORT}` });
+    serverInfo.addRow({ key: 'Server URL', value: `http://${env.HOST}:${env.PORT}` });
+    serverInfo.addRow({ key: 'Environment', value: env.NODE_ENV });
+    serverInfo.addRow({ key: 'PostgreSQL', value: `${env.POSTGRES_HOST}:${env.POSTGRES_PORT}` });
+    serverInfo.addRow({ key: 'Redis', value: `${env.REDIS_HOST}:${env.REDIS_PORT}` });
 
     console.log('\n🚀 Server Information:');
     serverInfo.printTable();
