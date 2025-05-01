@@ -16,7 +16,8 @@ const schema = {
     'REDIS_HOST',
     'REDIS_PORT',
     'PORT',
-    'HOST'
+    'HOST',
+    'JWT_SECRET'
   ],
   properties: {
     POSTGRES_USER: { type: 'string' },
@@ -27,7 +28,8 @@ const schema = {
     REDIS_HOST: { type: 'string' },
     REDIS_PORT: { type: 'string' },
     PORT: { type: 'string' },
-    HOST: { type: 'string' }
+    HOST: { type: 'string' },
+    JWT_SECRET: { type: 'string' }
   }
 };
 

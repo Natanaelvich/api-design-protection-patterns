@@ -16,6 +16,7 @@ interface EnvConfig {
   REDIS_PORT: string;
   PORT: string;
   HOST: string;
+  JWT_SECRET: string;
 }
 
 const server = Fastify({
