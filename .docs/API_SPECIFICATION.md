@@ -1,158 +1,39 @@
-# E-Commerce API Specification
+# API Specification
 
 ## Base URL
 
-- Development: `https://api-dev.ecommerce-example.com`
-- Production: `https://api.ecommerce-example.com`
+- Development: `http://localhost:3000/api`
+- Production: `https://api.example.com/api`
 
 ## API Versions
 
-- Current Version: `v1`
-- Supported Versions: `v1`, `v2`
-- Deprecation: Version `v1` will be deprecated on 2024-12-31
+- Current: `v2`
+- Supported: `v1`, `v2`
+- Deprecated: `v1` (will be removed on 2024-12-31)
 
 ## Authentication
 
-The API uses OAuth 2.0 for authentication. Acquire tokens through:
+The API uses OAuth 2.0 for authentication.
 
-```
+### Get Access Token
+```http
 POST /auth/token
-```
+Content-Type: application/json
 
-**Request Body:**
-```json
 {
-  "grant_type": "password",
-  "username": "user@example.com",
-  "password": "securepassword",
-  "client_id": "your_client_id"
+  "grant_type": "client_credentials",
+  "client_id": "your_client_id",
+  "client_secret": "your_client_secret"
 }
 ```
 
-**Response:**
+Response:
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "token_type": "Bearer",
-  "expires_in": 3600,
-  "refresh_token": "def50200..."
+  "expires_in": 3600
 }
-```
-
-Include the token in all authenticated requests:
-```
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-```
-
-## User Registration
-
-Register a new user account:
-
-```
-POST /api/v1/auth/register
-```
-
-**Request Body:**
-```json
-{
-  "email": "user@example.com",
-  "password": "securepassword",
-  "first_name": "John",
-  "last_name": "Doe",
-  "phone": "+1234567890",
-  "address": {
-    "street": "123 Main St",
-    "city": "Anytown",
-    "state": "CA",
-    "zipcode": "12345",
-    "country": "USA"
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "id": "user-123",
-  "email": "user@example.com",
-  "first_name": "John",
-  "last_name": "Doe",
-  "phone": "+1234567890",
-  "address": {
-    "street": "123 Main St",
-    "city": "Anytown",
-    "state": "CA",
-    "zipcode": "12345",
-    "country": "USA"
-  },
-  "created_at": "2024-03-15T10:30:00Z",
-  "updated_at": "2024-03-15T10:30:00Z"
-}
-```
-
-**Validation Rules:**
-- Email must be unique and valid
-- Password must be at least 8 characters long
-- Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character
-- Phone number must be in E.164 format
-- All address fields are required
-- Country must be a valid ISO 3166-1 alpha-2 code
-
-**Error Responses:**
-
-Email already exists:
-```json
-{
-  "error": {
-    "code": "EMAIL_ALREADY_EXISTS",
-    "message": "An account with this email already exists",
-    "details": [
-      {
-        "field": "email",
-        "issue": "Email address is already registered"
-      }
-    ],
-    "request_id": "req_123456"
-  }
-}
-```
-
-Invalid password format:
-```json
-{
-  "error": {
-    "code": "INVALID_PASSWORD_FORMAT",
-    "message": "Password does not meet security requirements",
-    "details": [
-      {
-        "field": "password",
-        "issue": "Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character"
-      }
-    ],
-    "request_id": "req_123457"
-  }
-}
-```
-
-## Rate Limiting
-
-All endpoints are subject to rate limiting:
-
-- Unauthenticated: 30 requests per minute
-- Authenticated: 100 requests per minute
-- Admin: 300 requests per minute
-
-Rate limit headers included in all responses:
-```
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1605615534
-```
-
-When limit is exceeded:
-```
-HTTP/1.1 429 Too Many Requests
-Retry-After: 30
 ```
 
 ## Endpoints
@@ -160,513 +41,373 @@ Retry-After: 30
 ### Products
 
 #### List Products
-
+```http
+GET /v2/products
+Authorization: Bearer <access_token>
 ```
-GET /api/v1/products
-```
 
-**Query Parameters:**
-- `page` (integer, default: 1): Page number
-- `limit` (integer, default: 20, max: 100): Items per page
-- `sort` (string): Sorting order (e.g., `price:asc,name:desc`)
-- `fields` (string): Comma-separated fields to include
-- `category` (string): Filter by category
-- `price_min` (number): Minimum price filter
-- `price_max` (number): Maximum price filter
+Query Parameters:
+- `page` (integer, optional): Page number (default: 1)
+- `limit` (integer, optional): Items per page (default: 20, max: 100)
+- `sort` (string, optional): Sort field (e.g., "price", "-price")
+- `filter` (object, optional): Filter criteria
+  - `category` (string): Category ID
+  - `price` (object): Price range
+    - `min` (number): Minimum price
+    - `max` (number): Maximum price
+  - `inStock` (boolean): Stock availability
 
-**Response:**
+Response:
 ```json
 {
   "data": [
     {
-      "id": "prod-123",
-      "name": "Smartphone XYZ",
-      "description": "High-end smartphone with advanced features",
-      "price": 899.99,
-      "category": "electronics",
-      "images": ["https://example.com/img1.jpg", "https://example.com/img2.jpg"],
-      "inventory_count": 45,
-      "rating": 4.7,
-      "created_at": "2023-04-15T10:30:00Z",
-      "updated_at": "2023-05-20T14:15:00Z"
-    },
-    // More products...
+      "id": "prod_123",
+      "name": "Product Name",
+      "description": "Product description",
+      "price": 99.99,
+      "category": "cat_456",
+      "inStock": true,
+      "createdAt": "2024-03-20T12:00:00Z",
+      "updatedAt": "2024-03-20T12:00:00Z"
+    }
   ],
   "pagination": {
-    "total_items": 247,
-    "total_pages": 13,
-    "current_page": 1,
-    "items_per_page": 20,
-    "next": "/api/v1/products?page=2&limit=20",
-    "prev": null
+    "page": 1,
+    "limit": 20,
+    "total": 100,
+    "pages": 5
   }
 }
 ```
 
 #### Get Product Details
-
+```http
+GET /v2/products/{product_id}
+Authorization: Bearer <access_token>
 ```
-GET /api/v1/products/{id}
-```
 
-**Path Parameters:**
-- `id` (string, required): Product identifier
+Path Parameters:
+- `product_id` (string): Product ID
 
-**Response:**
+Response:
 ```json
 {
-  "id": "prod-123",
-  "name": "Smartphone XYZ",
-  "description": "High-end smartphone with advanced features",
-  "price": 899.99,
-  "category": "electronics",
-  "images": ["https://example.com/img1.jpg", "https://example.com/img2.jpg"],
-  "inventory_count": 45,
+  "id": "prod_123",
+  "name": "Product Name",
+  "description": "Product description",
+  "price": 99.99,
+  "category": "cat_456",
+  "inStock": true,
   "variants": [
     {
-      "id": "var-1",
-      "color": "black",
-      "storage": "128GB",
-      "price": 899.99,
-      "inventory_count": 30
-    },
-    {
-      "id": "var-2",
-      "color": "black",
-      "storage": "256GB",
-      "price": 999.99,
-      "inventory_count": 15
+      "id": "var_789",
+      "name": "Small",
+      "price": 89.99,
+      "inStock": true
     }
   ],
-  "rating": 4.7,
-  "reviews": [
+  "images": [
     {
-      "id": "rev-456",
-      "user_id": "user-789",
-      "rating": 5,
-      "comment": "Excellent product, very satisfied!",
-      "created_at": "2023-05-10T09:15:00Z"
-    }
-    // More reviews...
-  ],
-  "created_at": "2023-04-15T10:30:00Z",
-  "updated_at": "2023-05-20T14:15:00Z"
-}
-```
-
-#### Create Product
-
-```
-POST /api/v1/products
-```
-
-**Request Body:**
-```json
-{
-  "name": "New Smartphone Model",
-  "description": "Latest smartphone with advanced features",
-  "price": 1099.99,
-  "category": "electronics",
-  "images": ["https://example.com/img1.jpg", "https://example.com/img2.jpg"],
-  "inventory_count": 100,
-  "variants": [
-    {
-      "color": "black",
-      "storage": "256GB",
-      "price": 1099.99,
-      "inventory_count": 50
-    },
-    {
-      "color": "white",
-      "storage": "256GB",
-      "price": 1099.99,
-      "inventory_count": 50
-    }
-  ]
-}
-```
-
-**Response:**
-```json
-{
-  "id": "prod-124",
-  "name": "New Smartphone Model",
-  "description": "Latest smartphone with advanced features",
-  "price": 1099.99,
-  "category": "electronics",
-  "images": ["https://example.com/img1.jpg", "https://example.com/img2.jpg"],
-  "inventory_count": 100,
-  "variants": [
-    {
-      "id": "var-3",
-      "color": "black",
-      "storage": "256GB",
-      "price": 1099.99,
-      "inventory_count": 50
-    },
-    {
-      "id": "var-4",
-      "color": "white",
-      "storage": "256GB",
-      "price": 1099.99,
-      "inventory_count": 50
+      "id": "img_123",
+      "url": "https://example.com/images/123.jpg",
+      "alt": "Product image"
     }
   ],
-  "rating": null,
-  "created_at": "2023-06-01T11:45:00Z",
-  "updated_at": "2023-06-01T11:45:00Z"
+  "createdAt": "2024-03-20T12:00:00Z",
+  "updatedAt": "2024-03-20T12:00:00Z"
 }
-```
-
-#### Update Product
-
-```
-PUT /api/v1/products/{id}
-```
-
-**Path Parameters:**
-- `id` (string, required): Product identifier
-
-**Request Body:**
-```json
-{
-  "name": "Updated Smartphone Model",
-  "price": 999.99,
-  "inventory_count": 80
-}
-```
-
-**Response:**
-```json
-{
-  "id": "prod-124",
-  "name": "Updated Smartphone Model",
-  "description": "Latest smartphone with advanced features",
-  "price": 999.99,
-  "category": "electronics",
-  "images": ["https://example.com/img1.jpg", "https://example.com/img2.jpg"],
-  "inventory_count": 80,
-  "variants": [
-    {
-      "id": "var-3",
-      "color": "black",
-      "storage": "256GB",
-      "price": 1099.99,
-      "inventory_count": 50
-    },
-    {
-      "id": "var-4",
-      "color": "white",
-      "storage": "256GB",
-      "price": 1099.99,
-      "inventory_count": 50
-    }
-  ],
-  "rating": null,
-  "created_at": "2023-06-01T11:45:00Z",
-  "updated_at": "2023-06-01T12:30:00Z"
-}
-```
-
-#### Delete Product
-
-```
-DELETE /api/v1/products/{id}
-```
-
-**Path Parameters:**
-- `id` (string, required): Product identifier
-
-**Response:**
-```
-HTTP/1.1 204 No Content
 ```
 
 ### Orders
 
 #### Create Order
+```http
+POST /v2/orders
+Authorization: Bearer <access_token>
+Content-Type: application/json
 
-```
-POST /api/v1/orders
-```
-
-**Request Body:**
-```json
 {
   "items": [
     {
-      "product_id": "prod-123",
-      "variant_id": "var-1",
+      "productId": "prod_123",
+      "variantId": "var_789",
       "quantity": 2
-    },
-    {
-      "product_id": "prod-456",
-      "quantity": 1
     }
   ],
-  "shipping_address": {
-    "name": "John Doe",
+  "shippingAddress": {
     "street": "123 Main St",
-    "city": "Anytown",
-    "state": "CA",
-    "zipcode": "12345",
-    "country": "USA"
+    "city": "New York",
+    "state": "NY",
+    "zipCode": "10001",
+    "country": "US"
   },
-  "payment_method": {
+  "paymentMethod": {
     "type": "credit_card",
-    "token": "tok_visa"
+    "token": "tok_123"
   }
 }
 ```
 
-**Response:**
+Response:
 ```json
 {
-  "id": "order-789",
-  "user_id": "user-456",
+  "id": "ord_123",
   "status": "pending",
   "items": [
     {
-      "product_id": "prod-123",
-      "variant_id": "var-1",
-      "name": "Smartphone XYZ",
-      "price": 899.99,
+      "productId": "prod_123",
+      "variantId": "var_789",
       "quantity": 2,
-      "subtotal": 1799.98
-    },
-    {
-      "product_id": "prod-456",
-      "name": "Wireless Headphones",
-      "price": 149.99,
-      "quantity": 1,
-      "subtotal": 149.99
+      "price": 89.99,
+      "total": 179.98
     }
   ],
-  "subtotal": 1949.97,
-  "tax": 175.50,
-  "shipping": 15.00,
-  "total": 2140.47,
-  "shipping_address": {
-    "name": "John Doe",
+  "shippingAddress": {
     "street": "123 Main St",
-    "city": "Anytown",
-    "state": "CA",
-    "zipcode": "12345",
-    "country": "USA"
+    "city": "New York",
+    "state": "NY",
+    "zipCode": "10001",
+    "country": "US"
   },
-  "payment_status": "pending",
-  "created_at": "2023-06-02T09:30:00Z",
-  "updated_at": "2023-06-02T09:30:00Z"
+  "paymentMethod": {
+    "type": "credit_card",
+    "last4": "4242"
+  },
+  "subtotal": 179.98,
+  "shipping": 10.00,
+  "tax": 15.00,
+  "total": 204.98,
+  "createdAt": "2024-03-20T12:00:00Z"
 }
 ```
 
 ## Error Responses
 
 ### Validation Error
-
-```
-HTTP/1.1 422 Unprocessable Entity
-Content-Type: application/json
-```
-
 ```json
 {
   "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "The request contains invalid parameters",
+    "code": "validation_error",
+    "message": "Invalid request data",
     "details": [
       {
-        "field": "email",
-        "issue": "Must be a valid email address"
-      },
-      {
-        "field": "password",
-        "issue": "Must be at least 8 characters long"
+        "field": "items[0].quantity",
+        "message": "Quantity must be greater than 0"
       }
-    ],
-    "request_id": "req_123456"
+    ]
   }
 }
 ```
 
 ### Resource Not Found
-
-```
-HTTP/1.1 404 Not Found
-Content-Type: application/json
-```
-
 ```json
 {
   "error": {
-    "code": "RESOURCE_NOT_FOUND",
-    "message": "The requested resource was not found",
-    "details": [
-      {
-        "resource": "product",
-        "id": "prod-999"
-      }
-    ],
-    "request_id": "req_123457"
+    "code": "not_found",
+    "message": "Product not found",
+    "resource": "product",
+    "id": "prod_123"
   }
 }
 ```
 
 ### Rate Limit Exceeded
-
-```
-HTTP/1.1 429 Too Many Requests
-Content-Type: application/json
-Retry-After: 30
-```
-
 ```json
 {
   "error": {
-    "code": "RATE_LIMIT_EXCEEDED",
-    "message": "Rate limit exceeded, please try again later",
-    "details": [
-      {
-        "limit": 100,
-        "remaining": 0,
-        "reset": 1605615534
-      }
-    ],
-    "request_id": "req_123458"
+    "code": "rate_limit_exceeded",
+    "message": "Too many requests",
+    "retryAfter": 60
   }
 }
 ```
 
-### Service Unavailable (Circuit Breaker Open)
-
-```
-HTTP/1.1 503 Service Unavailable
-Content-Type: application/json
-Retry-After: 60
-```
-
+### Circuit Breaker Open
 ```json
 {
   "error": {
-    "code": "SERVICE_UNAVAILABLE",
-    "message": "The service is temporarily unavailable",
-    "details": [
-      {
-        "service": "payment_processor",
-        "status": "degraded"
-      }
-    ],
-    "request_id": "req_123459"
+    "code": "circuit_breaker_open",
+    "message": "Service temporarily unavailable",
+    "retryAfter": 30
   }
 }
 ```
 
-## API Protection Patterns Examples
+## Protection Patterns
 
-### Circuit Breaker Implementation
+### Rate Limiting
+- Window: 60 seconds
+- Limits:
+  - Anonymous: 60 requests per window
+  - Authenticated: 1000 requests per window
+  - Premium: 5000 requests per window
+- Headers:
+  - `X-RateLimit-Limit`: Maximum requests per window
+  - `X-RateLimit-Remaining`: Remaining requests
+  - `X-RateLimit-Reset`: Window reset time
 
-When an external service fails repeatedly, the circuit breaker opens:
+### Circuit Breaker
+- Failure Threshold: 5 failures
+- Reset Timeout: 30 seconds
+- Half-Open Timeout: 5 seconds
+- States:
+  - Closed: Normal operation
+  - Open: Failing, rejecting requests
+  - Half-Open: Testing recovery
 
-```
-GET /api/v1/products/prod-123
-```
+### Timeout and Retry
+- Timeout: 5 seconds
+- Retry Policy:
+  - Max Attempts: 3
+  - Initial Delay: 1 second
+  - Max Delay: 10 seconds
+  - Jitter: ±20%
 
-**Response (Circuit Open):**
-```json
-{
-  "error": {
-    "code": "SERVICE_UNAVAILABLE",
-    "message": "Product service temporarily unavailable",
-    "details": [
-      {
-        "circuit": "product_service",
-        "state": "open",
-        "retry_after": 30
-      }
-    ],
-    "request_id": "req_123460"
-  }
-}
-```
+### Throttling
+- Max Concurrent: 100 requests
+- Queue Size: 1000 requests
+- Priority Levels:
+  - High: Premium users
+  - Medium: Authenticated users
+  - Low: Anonymous users
 
-### Timeout and Retry Examples
-
-For long-running operations, the API provides status endpoints:
-
-```
-POST /api/v1/orders/bulk-import
-```
-
-**Response:**
-```json
-{
-  "job_id": "job-123",
-  "status": "processing",
-  "progress_url": "/api/v1/jobs/job-123"
-}
-```
-
-Check status:
-```
-GET /api/v1/jobs/job-123
-```
-
-**Response:**
-```json
-{
-  "job_id": "job-123",
-  "status": "completed",
-  "progress": 100,
-  "result_url": "/api/v1/orders/bulk-import/results/job-123"
-}
-```
-
-## Idempotency
-
-For non-idempotent operations, use idempotency keys:
-
-```
-POST /api/v1/payments
-Idempotency-Key: 123e4567-e89b-12d3-a456-426614174000
-```
-
-**Request Body:**
-```json
-{
-  "order_id": "order-123",
-  "amount": 99.99,
-  "currency": "USD",
-  "payment_method": "card_token_123"
-}
-```
-
-If the same request is sent again with the same idempotency key, the original response will be returned without performing the operation again.
-
-## Versioning Examples
+## Versioning
 
 ### URL Versioning
-
-```
-GET /api/v1/products
-GET /api/v2/products
-```
+- Format: `/v{version}/resource`
+- Example: `/v2/products`
 
 ### Header Versioning
-
-```
-GET /api/products
-Accept-Version: v1
-
-GET /api/products
-Accept-Version: v2
-```
+- Header: `X-API-Version`
+- Example: `X-API-Version: 2`
 
 ### Media Type Versioning
+- Format: `application/vnd.example.v{version}+json`
+- Example: `application/vnd.example.v2+json`
 
+## Data Types
+
+### Common Types
+- `id`: UUID string
+- `timestamp`: ISO 8601 datetime
+- `money`: Decimal number (2 decimal places)
+- `boolean`: true/false
+- `integer`: Whole number
+- `string`: UTF-8 text
+- `array`: Ordered list
+- `object`: Key-value pairs
+
+### Custom Types
+- `ProductId`: UUID string
+- `OrderId`: UUID string
+- `UserId`: UUID string
+- `CategoryId`: UUID string
+- `VariantId`: UUID string
+- `ImageId`: UUID string
+- `Address`: Object with street, city, state, zipCode, country
+- `PaymentMethod`: Object with type and token
+- `Price`: Object with amount and currency
+
+## Pagination
+
+### Request
+- `page`: Page number (1-based)
+- `limit`: Items per page (default: 20, max: 100)
+
+### Response
+```json
+{
+  "pagination": {
+    "page": 1,
+    "limit": 20,
+    "total": 100,
+    "pages": 5
+  }
+}
 ```
-GET /api/products
-Accept: application/vnd.ecommerce.v1+json
 
-GET /api/products
-Accept: application/vnd.ecommerce.v2+json
-``` 
+## Filtering
+
+### Operators
+- `eq`: Equal to
+- `ne`: Not equal to
+- `gt`: Greater than
+- `gte`: Greater than or equal to
+- `lt`: Less than
+- `lte`: Less than or equal to
+- `in`: In array
+- `nin`: Not in array
+- `like`: Pattern match
+- `ilike`: Case-insensitive pattern match
+
+### Examples
+```
+?filter[price][gte]=10&filter[price][lte]=100
+?filter[category][in]=cat1,cat2
+?filter[name][like]=*shirt*
+```
+
+## Sorting
+
+### Format
+- `sort=field` (ascending)
+- `sort=-field` (descending)
+- Multiple fields: `sort=field1,-field2`
+
+### Examples
+```
+?sort=price
+?sort=-createdAt
+?sort=category,price
+```
+
+## Response Format
+
+### Success Response
+```json
+{
+  "data": {
+    // Response data
+  },
+  "meta": {
+    // Metadata
+  }
+}
+```
+
+### Error Response
+```json
+{
+  "error": {
+    "code": "error_code",
+    "message": "Error message",
+    "details": [
+      // Error details
+    ]
+  }
+}
+```
+
+## Security
+
+### Authentication
+- OAuth 2.0
+- JWT tokens
+- Token expiration
+- Refresh tokens
+
+### Authorization
+- Role-based access control
+- Resource ownership
+- Permission checks
+- API key validation
+
+### Data Protection
+- HTTPS required
+- Input validation
+- Output sanitization
+- Error handling
+- Rate limiting
+- Circuit breaking
+- Request throttling 

@@ -1,207 +1,466 @@
 # Implementation Guide
 
-This guide provides recommendations for how to approach this challenge, including suggested technologies, implementation strategies, and best practices for each protection pattern.
+## Development Environment Setup
 
-## Suggested Technology Stack
+### Prerequisites
+- Node.js (v18 or higher)
+- Docker and Docker Compose
+- PostgreSQL (v15 or higher)
+- Redis (v7 or higher)
+- Git
 
-You may choose any technology stack you're comfortable with. Here are some suggestions:
+### Local Development Setup
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/your-username/api-design-protection-patterns.git
+   cd api-design-protection-patterns
+   ```
 
-### Backend Frameworks
-- **Node.js**: Express, NestJS, Fastify
-- **Python**: FastAPI, Flask, Django
-- **Java**: Spring Boot
-- **Go**: Gin, Echo
-- **Ruby**: Ruby on Rails
-- **.NET**: ASP.NET Core
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-### Database
-- **SQL**: PostgreSQL, MySQL
-- **NoSQL**: MongoDB, DynamoDB
-- **In-memory**: Redis (for rate limiting and caching)
+3. Set up environment variables:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your local configuration
+   ```
 
-### API Documentation
-- Swagger/OpenAPI
-- Postman Collections
-- RAML
+4. Start development services:
+   ```bash
+   docker-compose up -d
+   ```
 
-### Authentication
-- OAuth 2.0 / JWT
-- Auth0, Okta, or custom implementation
+5. Run database migrations:
+   ```bash
+   npm run db:migrate
+   ```
 
-## Implementation Steps
+6. Start development server:
+   ```bash
+   npm run dev
+   ```
 
-### 1. Initial Setup
+## Project Structure
 
-1. Create a new project using your preferred framework
-2. Set up a database connection
-3. Define your API structure and base routes
-4. Implement basic authentication
+### Directory Layout
+```
+src/
+├── domain/           # Domain layer
+│   ├── entities/     # Domain entities
+│   ├── value-objects/# Value objects
+│   ├── events/       # Domain events
+│   ├── services/     # Domain services
+│   └── repositories/ # Repository interfaces
+├── application/      # Application layer
+│   ├── use-cases/    # Use cases
+│   ├── dtos/         # Data transfer objects
+│   └── services/     # Application services
+├── infrastructure/   # Infrastructure layer
+│   ├── database/     # Database implementations
+│   ├── external/     # External service clients
+│   └── messaging/    # Message broker implementations
+└── presentation/     # Presentation layer
+    ├── controllers/  # HTTP controllers
+    ├── middlewares/  # Express middlewares
+    └── validators/   # Request validators
+```
 
-### 2. Core Entities Implementation
+## Development Workflow
 
-1. Design and implement database schemas/models
-2. Create CRUD endpoints for Products, Users, Orders, and Inventory
-3. Implement basic business logic for each entity
-4. Add validation for request data
+### Code Style
+- Follow TypeScript best practices
+- Use ESLint and Prettier for code formatting
+- Follow the project's naming conventions
+- Write meaningful commit messages
 
-### 3. API Documentation
+### Branching Strategy
+- `main`: Production-ready code
+- `develop`: Integration branch
+- `feature/*`: New features
+- `bugfix/*`: Bug fixes
+- `release/*`: Release preparation
 
-1. Choose a documentation tool (Swagger/OpenAPI recommended)
-2. Document all endpoints with:
-   - Request parameters and body schemas
-   - Response schemas
-   - Authentication requirements
-   - Example requests and responses
+### Commit Message Format
+```
+<type>(<scope>): <subject>
 
-### 4. Protection Patterns Implementation
+<body>
 
-#### Rate Limiting
+<footer>
+```
 
-1. Choose a rate limiting library for your framework or implement your own
-2. Configure different rate limits for different endpoints or user roles
-3. Add rate limit headers to all responses
-4. Implement proper error responses when limits are exceeded
+Types:
+- `feat`: New feature
+- `fix`: Bug fix
+- `docs`: Documentation
+- `style`: Formatting
+- `refactor`: Code restructuring
+- `test`: Adding tests
+- `chore`: Maintenance
 
-**Example implementations:**
-- Node.js: express-rate-limit, rate-limiter-flexible
-- Python: Flask-Limiter, Django-ratelimit
-- Java: bucket4j, resilience4j
-- Custom: Redis-based implementation
+## Testing
 
-#### Throttling
+### Unit Tests
+```bash
+# Run all unit tests
+npm run test:unit
 
-1. Implement request throttling based on server load
-2. Set up metrics collection for CPU, memory, and response time
-3. Configure adaptive throttling based on these metrics
-4. Add logic to prioritize critical operations
+# Run tests with coverage
+npm run test:unit:coverage
 
-**Example implementations:**
-- Load-based throttling using server metrics
-- Queue-based throttling for managing concurrency
-- Priority-based throttling for different operations
+# Run specific test file
+npm run test:unit -- src/domain/entities/product.test.ts
+```
 
-#### Timeout and Retry
+### Integration Tests
+```bash
+# Run all integration tests
+npm run test:integration
 
-1. Configure timeout settings for all external service calls
-2. Implement retry mechanisms with exponential backoff
-3. Add jitter to prevent thundering herd problems
-4. Use idempotency keys for write operations to ensure safety
+# Run specific test file
+npm run test:integration -- src/infrastructure/database/product.repository.test.ts
+```
 
-**Example implementations:**
-- Node.js: axios with timeout and retry, got, node-fetch with timeout
-- Java: resilience4j-retry, Spring Retry
-- Python: tenacity, backoff
-- Libraries like axios-retry, retry-axios
+### End-to-End Tests
+```bash
+# Run all E2E tests
+npm run test:e2e
 
-#### Circuit Breaker
+# Run specific test file
+npm run test:e2e -- tests/e2e/product.test.ts
+```
 
-1. Implement circuit breaker for all external dependencies
-2. Configure thresholds for opening/closing the circuit
-3. Implement fallback mechanisms for when the circuit is open
-4. Add monitoring to track circuit state changes
-
-**Example implementations:**
-- Node.js: opossum, hystrix-js
-- Java: resilience4j, Hystrix
-- Spring Cloud: Spring Circuit Breaker
-- Python: circuitbreaker, pybreaker
-
-### 5. API Versioning
-
-1. Choose a versioning strategy (URL path, header, media type)
-2. Implement the versioning mechanism in your API framework
-3. Create at least two versions of one endpoint to demonstrate versioning
-4. Document the versioning strategy and deprecation process
-
-### 6. Pagination and Result Limiting
-
-1. Implement pagination for all collection endpoints
-2. Add support for sorting and filtering
-3. Include pagination metadata in responses
-4. Add limit parameters to control response size
-
-### 7. Error Handling
-
-1. Create standardized error response format
-2. Implement proper HTTP status codes for different scenarios
-3. Add informative error messages and codes
-4. Include request identifiers for tracking issues
-
-### 8. Testing
-
-1. Write unit tests for core business logic
-2. Create integration tests for API endpoints
-3. Add specific tests for protection patterns
-4. Implement load tests to verify rate limiting and throttling
-
-## Implementation Tips for Protection Patterns
+## API Protection Patterns
 
 ### Rate Limiting
+```typescript
+// Example implementation
+import { RateLimiter } from '@/domain/services/rate-limiter';
+import { RedisRateLimiter } from '@/infrastructure/redis/rate-limiter';
 
-- Use a distributed cache like Redis to track request counts in a clustered environment
-- Consider different rate limit types:
-  - Fixed window (e.g., 100 requests per minute)
-  - Sliding window (e.g., 100 requests per 60-second period)
-  - Token bucket (allows bursts of traffic)
-- Store rate limiting data with fast expiration to avoid memory issues
+const rateLimiter = new RedisRateLimiter({
+  windowSeconds: 60,
+  maxRequests: 100
+});
+
+// In middleware
+app.use(async (req, res, next) => {
+  const isAllowed = await rateLimiter.isAllowed(req.ip);
+  if (!isAllowed) {
+    return res.status(429).json({
+      error: 'Rate limit exceeded'
+    });
+  }
+  next();
+});
+```
 
 ### Circuit Breaker
+```typescript
+// Example implementation
+import { CircuitBreaker } from '@/domain/services/circuit-breaker';
+import { RedisCircuitBreaker } from '@/infrastructure/redis/circuit-breaker';
 
-- Configure appropriate thresholds based on expected error rates
-- Implement circuit breakers at different levels (HTTP client, DB client)
-- Add monitoring to track circuit state and error rates
-- Consider using the Half-Open state to test system recovery
+const circuitBreaker = new RedisCircuitBreaker({
+  failureThreshold: 5,
+  resetTimeout: 30000
+});
+
+// In service
+async function callExternalService() {
+  if (await circuitBreaker.isOpen()) {
+    throw new Error('Circuit breaker is open');
+  }
+  try {
+    const result = await externalService.call();
+    await circuitBreaker.recordSuccess();
+    return result;
+  } catch (error) {
+    await circuitBreaker.recordFailure();
+    throw error;
+  }
+}
+```
 
 ### Timeout and Retry
+```typescript
+// Example implementation
+import { RetryPolicy } from '@/domain/services/retry-policy';
+import { ExponentialBackoffRetry } from '@/infrastructure/retry/exponential-backoff';
 
-- Use different timeout values for different types of operations
-- Implement exponential backoff with jitter for retries
-- Be careful with retries for non-idempotent operations
-- Consider using bulkheads to isolate failures
+const retryPolicy = new ExponentialBackoffRetry({
+  maxAttempts: 3,
+  initialDelay: 1000
+});
 
-### Versioning
+// In service
+async function executeWithRetry<T>(operation: () => Promise<T>): Promise<T> {
+  let lastError: Error;
+  for (let attempt = 1; attempt <= retryPolicy.maxAttempts; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+      if (!retryPolicy.shouldRetry(attempt, error)) {
+        break;
+      }
+      await new Promise(resolve => 
+        setTimeout(resolve, retryPolicy.getDelay(attempt))
+      );
+    }
+  }
+  throw lastError;
+}
+```
 
-- Choose a versioning strategy that fits your API consumers
-- Plan for backward compatibility
-- Document the lifecycle and support period for each version
-- Have a clear deprecation process with adequate notice
+### Throttling
+```typescript
+// Example implementation
+import { Throttler } from '@/domain/services/throttler';
+import { RedisThrottler } from '@/infrastructure/redis/throttler';
 
-## Advanced Considerations
+const throttler = new RedisThrottler({
+  maxConcurrent: 10,
+  maxQueueSize: 100
+});
 
-### Resilience Testing
+// In middleware
+app.use(async (req, res, next) => {
+  const isThrottled = await throttler.isThrottled();
+  if (isThrottled) {
+    return res.status(429).json({
+      error: 'Service is currently throttled',
+      retryAfter: await throttler.getRetryAfter()
+    });
+  }
+  next();
+});
+```
 
-Consider implementing chaos testing to verify your protection patterns:
+## Deployment
 
-1. Simulate high load to test rate limiting
-2. Introduce latency to test timeouts
-3. Force external service failures to test circuit breakers
-4. Use tools like Chaos Monkey or similar for systematically testing resilience
+### Production Deployment
+1. Build the application:
+   ```bash
+   npm run build
+   ```
 
-### Monitoring and Observability
+2. Run database migrations:
+   ```bash
+   npm run db:migrate:prod
+   ```
 
-Add proper monitoring for all protection patterns:
+3. Start the application:
+   ```bash
+   npm start
+   ```
 
-1. Track rate limiting hits and near-misses
-2. Monitor circuit breaker state changes
-3. Log retry attempts and successes
-4. Track API version usage for deprecation planning
+### Docker Deployment
+1. Build the Docker image:
+   ```bash
+   docker build -t api-design-protection-patterns .
+   ```
 
-### Documentation of Protection Patterns
+2. Run the container:
+   ```bash
+   docker run -p 3000:3000 api-design-protection-patterns
+   ```
 
-Make sure to document how your protection patterns work:
+## Monitoring
 
-1. Explain rate limits and how to handle 429 responses
-2. Document retry strategies that clients should implement
-3. Explain the circuit breaker pattern and how to handle 503 responses
-4. Provide clear migration guides between API versions
+### Health Checks
+- Endpoint: `GET /health`
+- Response:
+  ```json
+  {
+    "status": "healthy",
+    "timestamp": "2024-03-20T12:00:00Z",
+    "services": {
+      "database": "healthy",
+      "redis": "healthy",
+      "external-api": "healthy"
+    }
+  }
+  ```
 
-## Final Deliverable Checklist
+### Metrics
+- Endpoint: `GET /metrics`
+- Format: Prometheus metrics
+- Key metrics:
+  - Request rate
+  - Error rate
+  - Response time
+  - Circuit breaker state
+  - Rate limit usage
 
-- [ ] Complete API implementation with all required endpoints
-- [ ] Implementation of all protection patterns
-- [ ] Comprehensive API documentation
-- [ ] Test suite covering all endpoints and protection patterns
-- [ ] README with setup instructions
-- [ ] Architectural overview explaining your design decisions
+### Logging
+- Format: JSON
+- Fields:
+  - timestamp
+  - level
+  - message
+  - context
+  - requestId
+  - userId
+  - duration
+  - error (if any)
 
-Good luck with your implementation! 
+## Troubleshooting
+
+### Common Issues
+1. Database Connection
+   - Check database credentials
+   - Verify network connectivity
+   - Check connection pool settings
+
+2. Redis Connection
+   - Verify Redis is running
+   - Check Redis configuration
+   - Monitor Redis memory usage
+
+3. Rate Limiting
+   - Check Redis connection
+   - Verify rate limit configuration
+   - Monitor rate limit metrics
+
+4. Circuit Breaker
+   - Check failure threshold
+   - Monitor circuit state
+   - Verify external service health
+
+### Debugging
+1. Enable debug logging:
+   ```bash
+   DEBUG=* npm run dev
+   ```
+
+2. Use Chrome DevTools:
+   - Open Chrome DevTools
+   - Go to Network tab
+   - Filter by XHR requests
+
+3. Use logging:
+   ```typescript
+   import { logger } from '@/infrastructure/logging';
+
+   logger.debug('Debug message', { context: 'service' });
+   logger.info('Info message', { context: 'service' });
+   logger.error('Error message', { error, context: 'service' });
+   ```
+
+## Security
+
+### Authentication
+- Use JWT for authentication
+- Implement refresh tokens
+- Use secure cookie settings
+- Implement rate limiting for auth endpoints
+
+### Authorization
+- Implement role-based access control
+- Use middleware for authorization checks
+- Validate user permissions
+- Implement resource ownership checks
+
+### Data Protection
+- Use HTTPS
+- Implement input validation
+- Sanitize user input
+- Use parameterized queries
+- Implement proper error handling
+
+## Performance
+
+### Optimization
+1. Database
+   - Use indexes
+   - Optimize queries
+   - Use connection pooling
+   - Implement caching
+
+2. API
+   - Implement response compression
+   - Use proper HTTP caching
+   - Implement pagination
+   - Use efficient serialization
+
+3. Infrastructure
+   - Use load balancing
+   - Implement horizontal scaling
+   - Use CDN for static content
+   - Optimize Docker configuration
+
+### Monitoring
+1. Application Metrics
+   - Response time
+   - Error rate
+   - Request rate
+   - Resource usage
+
+2. Business Metrics
+   - User activity
+   - Feature usage
+   - Error patterns
+   - Performance trends
+
+## Maintenance
+
+### Backup
+1. Database
+   ```bash
+   # Create backup
+   pg_dump -U postgres -d mydb > backup.sql
+
+   # Restore backup
+   psql -U postgres -d mydb < backup.sql
+   ```
+
+2. Redis
+   ```bash
+   # Create backup
+   redis-cli SAVE
+
+   # Restore backup
+   redis-cli FLUSHALL
+   redis-cli < backup.rdb
+   ```
+
+### Updates
+1. Dependencies
+   ```bash
+   # Check for updates
+   npm outdated
+
+   # Update dependencies
+   npm update
+
+   # Update specific package
+   npm update package-name
+   ```
+
+2. Database
+   ```bash
+   # Create migration
+   npm run db:migration:create
+
+   # Run migrations
+   npm run db:migrate
+
+   # Rollback migration
+   npm run db:rollback
+   ```
+
+### Monitoring
+1. Application
+   - Monitor error rates
+   - Track response times
+   - Check resource usage
+   - Monitor external services
+
+2. Infrastructure
+   - Monitor server health
+   - Track network usage
+   - Check disk space
+   - Monitor memory usage 
