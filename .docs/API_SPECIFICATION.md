@@ -44,6 +44,96 @@ Include the token in all authenticated requests:
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ```
 
+## User Registration
+
+Register a new user account:
+
+```
+POST /api/v1/auth/register
+```
+
+**Request Body:**
+```json
+{
+  "email": "user@example.com",
+  "password": "securepassword",
+  "first_name": "John",
+  "last_name": "Doe",
+  "phone": "+1234567890",
+  "address": {
+    "street": "123 Main St",
+    "city": "Anytown",
+    "state": "CA",
+    "zipcode": "12345",
+    "country": "USA"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "id": "user-123",
+  "email": "user@example.com",
+  "first_name": "John",
+  "last_name": "Doe",
+  "phone": "+1234567890",
+  "address": {
+    "street": "123 Main St",
+    "city": "Anytown",
+    "state": "CA",
+    "zipcode": "12345",
+    "country": "USA"
+  },
+  "created_at": "2024-03-15T10:30:00Z",
+  "updated_at": "2024-03-15T10:30:00Z"
+}
+```
+
+**Validation Rules:**
+- Email must be unique and valid
+- Password must be at least 8 characters long
+- Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character
+- Phone number must be in E.164 format
+- All address fields are required
+- Country must be a valid ISO 3166-1 alpha-2 code
+
+**Error Responses:**
+
+Email already exists:
+```json
+{
+  "error": {
+    "code": "EMAIL_ALREADY_EXISTS",
+    "message": "An account with this email already exists",
+    "details": [
+      {
+        "field": "email",
+        "issue": "Email address is already registered"
+      }
+    ],
+    "request_id": "req_123456"
+  }
+}
+```
+
+Invalid password format:
+```json
+{
+  "error": {
+    "code": "INVALID_PASSWORD_FORMAT",
+    "message": "Password does not meet security requirements",
+    "details": [
+      {
+        "field": "password",
+        "issue": "Password must be at least 8 characters long and contain uppercase, lowercase, number, and special character"
+      }
+    ],
+    "request_id": "req_123457"
+  }
+}
+```
+
 ## Rate Limiting
 
 All endpoints are subject to rate limiting:

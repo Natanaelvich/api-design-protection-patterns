@@ -38,6 +38,30 @@ api-design-protection-patterns/
 │   │   ├── order.ts                  # Order model
 │   │   └── inventory.ts              # Inventory model
 │   │
+│   ├── repositories/                 # Repository layer
+│   │   ├── interfaces/               # Repository interfaces
+│   │   │   ├── user.repository.ts    # User repository interface
+│   │   │   ├── product.repository.ts # Product repository interface
+│   │   │   ├── order.repository.ts   # Order repository interface
+│   │   │   └── inventory.repository.ts # Inventory repository interface
+│   │   │
+│   │   ├── drizzle/                 # Drizzle ORM implementations
+│   │   │   ├── schema/              # Database schema definitions
+│   │   │   │   ├── user.schema.ts   # User table schema
+│   │   │   │   ├── product.schema.ts # Product table schema
+│   │   │   │   ├── order.schema.ts  # Order table schema
+│   │   │   │   └── inventory.schema.ts # Inventory table schema
+│   │   │   │
+│   │   │   ├── user.repository.ts   # User repository implementation
+│   │   │   ├── product.repository.ts # Product repository implementation
+│   │   │   ├── order.repository.ts  # Order repository implementation
+│   │   │   └── inventory.repository.ts # Inventory repository implementation
+│   │   │
+│   │   └── redis/                   # Redis implementations (for caching)
+│   │       ├── user.cache.ts        # User cache implementation
+│   │       ├── product.cache.ts     # Product cache implementation
+│   │       └── rate.limiter.ts      # Rate limiter implementation
+│   │
 │   ├── middleware/                   # Middleware functions
 │   │   ├── auth/                     # Authentication middleware
 │   │   │   ├── jwt.ts                # JWT verification
@@ -62,6 +86,16 @@ api-design-protection-patterns/
 │   │
 │   └── app.ts                        # Main application file
 │
+├── migrations/                       # Database migrations
+│   ├── drizzle/                      # Drizzle migrations
+│   │   ├── 0000_initial.ts          # Initial migration
+│   │   ├── 0001_add_user_fields.ts  # Add user fields
+│   │   └── 0002_add_product_variants.ts # Add product variants
+│   │
+│   └── scripts/                      # Migration scripts
+│       ├── migrate.ts               # Migration runner
+│       └── seed.ts                  # Database seeder
+│
 ├── tests/                            # Tests
 │   ├── unit/                         # Unit tests
 │   ├── integration/                  # Integration tests
@@ -79,6 +113,7 @@ api-design-protection-patterns/
 ├── .env.example                      # Example environment variables
 ├── package.json                      # Project dependencies
 ├── tsconfig.json                     # TypeScript configuration
+├── drizzle.config.ts                 # Drizzle configuration
 ├── docker-compose.yml                # Docker configuration
 ├── Dockerfile                        # Docker build file
 ├── README.md                         # Project documentation
@@ -91,7 +126,8 @@ api-design-protection-patterns/
 The project follows clean architecture principles, separating the code into distinct layers:
 - **API Layer**: Handles HTTP requests and responses
 - **Service Layer**: Contains business logic
-- **Model Layer**: Defines data structures and database interactions
+- **Repository Layer**: Manages data persistence and retrieval
+- **Model Layer**: Defines data structures and validation
 - **Middleware Layer**: Implements cross-cutting concerns
 
 ### 2. Protection Patterns
@@ -149,6 +185,40 @@ The project implements a comprehensive testing strategy:
 - Performance monitoring
 - Alerting system
 
+### Repository Pattern
+The repository pattern is implemented using Drizzle ORM to:
+- Provide type-safe database operations
+- Handle database schema and migrations
+- Abstract database operations
+- Enable easy switching between different data sources
+- Facilitate unit testing through dependency injection
+- Separate business logic from data access concerns
+
+### Database Migrations
+The project uses Drizzle for database migrations, with a dedicated structure:
+
+```
+migrations/
+├── drizzle/                         # Drizzle migration files
+│   ├── 0000_initial.ts             # Initial schema
+│   ├── 0001_add_user_fields.ts     # Add new user fields
+│   └── 0002_add_product_variants.ts # Add product variants
+│
+└── scripts/                         # Migration utilities
+    ├── migrate.ts                  # Migration runner
+    └── seed.ts                     # Database seeder
+```
+
+Migration files are generated using Drizzle Kit:
+```bash
+npx drizzle-kit generate:pg
+```
+
+And applied using the migration script:
+```bash
+npm run migrate
+```
+
 ## Key Directories and Their Purpose
 
 ### `src/config/`
@@ -172,6 +242,12 @@ Defines data models and database schemas:
 - Validation rules
 - Data transformations
 
+### `src/repositories/`
+Manages data persistence and retrieval:
+- Repository interfaces
+- Drizzle ORM implementations
+- Redis implementations (for caching)
+
 ### `src/middleware/`
 Implements cross-cutting concerns:
 - Authentication and authorization
@@ -193,6 +269,13 @@ Provides utility functions:
 - Error type definitions
 - Response formatting
 - Logging utilities
+
+### `migrations/`
+Manages database schema changes:
+- Drizzle migration files
+- Migration scripts
+- Database seeding
+- Schema versioning
 
 ## Best Practices
 
